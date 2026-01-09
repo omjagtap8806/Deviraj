@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select Seats - PVR</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #1a1a1a; color: white; margin: 0; text-align: center; }
+        header { background-color: #ffd700; color: black; padding: 15px; }
+        
+        .container { max-width: 800px; margin: 20px auto; padding: 20px; }
+        .screen {
+            background-color: #fff;
+            height: 10px;
+            width: 80%;
+            margin: 20px auto 40px auto;
+            box-shadow: 0 0 10px #fff;
+            border-radius: 5px;
+        }
+        
+        .seats-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .row { display: flex; gap: 10px; }
+        
+        .seat {
+            width: 30px;
+            height: 30px;
+            background-color: #444;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            user-select: none;
+        }
+        
+        .seat.selected { background-color: #ffd700; color: black; font-weight: bold; }
+        .seat.occupied { background-color: #900; cursor: not-allowed; }
+        .seat:hover:not(.occupied) { background-color: #666; }
+
+        .info-panel {
+            background-color: #333;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 30px;
+        }
+        
+        .confirm-btn {
+            background-color: #ffd700;
+            color: black;
+            padding: 15px 40px;
+            border: none;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        .confirm-btn:disabled { background-color: #555; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Select Seats</h1>
+    </header>
+
+    <div class="container">
+        <h2 id="movieTitle">Movie Name</h2>
+        <p>Screen 1 | Time: 07:00 PM</p>
+        
+        <div class="screen"></div>
+        <p>SCREEN THIS WAY</p>
+
+        <div class="seats-container" id="seatMap">
+            </div>
+
+        <div class="info-panel">
+            <p>Selected Seats: <span id="selectedSeats">None</span></p>
+            <h3>Total Price: ₹<span id="totalPrice">0</span></h3>
+            <button id="confirmBtn" class="confirm-btn" onclick="confirmBooking()" disabled>Pay & Book</button>
+        </div>
+    </div>
+
+    <script>
+        // Get URL params
+        const urlParams = new URLSearchParams(window.location.search);
+        const movieName = urlParams.get('movie') || "Unknown Movie";
+        const ticketPrice = parseInt(urlParams.get('price')) || 200;
+
+        document.getElementById('movieTitle').innerText = movieName;
+
+        const rows = 5;
+        const seatsPerRow = 8;
+        const seatMap = document.getElementById('seatMap');
+        let selectedSeats = [];
+
+        // Generate Seats
+        for (let i = 0; i < rows; i++) {
+            let rowDiv = document.createElement('div');
+            rowDiv.classList.add('row');
+            for (let j = 0; j < seatsPerRow; j++) {
+                let seat = document.createElement('div');
+                let seatId = String.fromCharCode(65 + i) + (j + 1); // e.g., A1, A2
+                seat.classList.add('seat');
+                seat.innerText = seatId;
+                
+                // Randomly occupy some seats for realism
+                if (Math.random() < 0.2) seat.classList.add('occupied');
+
+                seat.onclick = () => {
+                    if (seat.classList.contains('occupied')) return;
+                    
+                    seat.classList.toggle('selected');
+                    
+                    if (seat.classList.contains('selected')) {
+                        selectedSeats.push(seatId);
+                    } else {
+                        selectedSeats = selectedSeats.filter(id => id !== seatId);
+                    }
+                    updateInfo();
+                };
+                rowDiv.appendChild(seat);
+            }
+            seatMap.appendChild(rowDiv);
+        }
+
+        function updateInfo() {
+            document.getElementById('selectedSeats').innerText = selectedSeats.length > 0 ? selectedSeats.join(', ') : 'None';
+            document.getElementById('totalPrice').innerText = selectedSeats.length * ticketPrice;
+            document.getElementById('confirmBtn').disabled = selectedSeats.length === 0;
+        }
+
+        function confirmBooking() {
+            const total = selectedSeats.length * ticketPrice;
+            const seats = selectedSeats.join(',');
+            window.location.href = `confirmation.html?movie=${encodeURIComponent(movieName)}&seats=${seats}&total=${total}`;
+        }
+    </script>
+</body>
+</html>
